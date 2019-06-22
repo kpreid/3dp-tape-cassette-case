@@ -1,5 +1,11 @@
-interior_dimensions = [51, 35, 8.5];
+// Dimensions of the cavity for the cassette.
+// Note that thickness must be adjusted depending on how good the printer's bridges are.
+interior_dimensions = [51, 35, 8.8];
+
+// X and Y offset of one reel's center from the center of the cavity.
 reel_position = [10.5, -1.5];
+
+// Diameter of the pin that locks the reels from turning.
 reel_pin_diameter = 8;
 
 pocket_depth = 12;
@@ -9,7 +15,7 @@ hinge_plate_gap = 0.2;
 hinge_diameter = 3;
 hinge_nub_thickness = 1.0;
 latch_diameter = 2;
-latch_nub_thickness = 0.8;
+latch_nub_thickness = 0.65;
 latch_preload_offset = 0.8;
 outer_chamfer = 0.4;
 
@@ -118,7 +124,7 @@ module cover_end_plate() {
         translate([hinge_plate_thickness / 2, 0, 0])
         cube([hinge_plate_thickness, outsideplusexact.y, outsideplusexact.z], center=true);
     
-        hinge_axis() inward_nub(hinge_diameter + hinge_plate_gap, hinge_nub_thickness, 2);
+        hinge_axis() inward_nub(hinge_diameter + hinge_plate_gap, hinge_nub_thickness, 3);
         
         translate([0, 0, latch_preload_offset])
         latch_axis()
@@ -171,8 +177,11 @@ module hinge_axis() {
 }
 
 module latch_axis() {
-    // TODO: y position is fudged
-    translate([0, interior_dimensions.y / 2 - interior_dimensions.z * 1.2, -interior_dimensions.z * 0.25])
+    // TODO: y position is not correctly calculated vs. pocket depth
+    translate([
+        0,
+        interior_dimensions.y / 2 - pocket_depth,
+        -interior_dimensions.z / 2 + latch_diameter / 2])
     rotate([0, 90, 0])
     children();
 }
