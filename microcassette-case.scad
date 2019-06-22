@@ -4,7 +4,9 @@ wall_thickness = 1;
 cover_gap = 0.4;
 hinge_plate_gap = 0.2;
 hinge_diameter = 3;
-hinge_nub_thickness = 0.5;
+hinge_nub_thickness = 1.0;
+latch_diameter = 2;
+latch_nub_thickness = 0.2;
 
 epsilon = 0.1;
 outsideplusexact = interior_dimensions + [1, 1, 1] * (wall_thickness * 2);
@@ -39,6 +41,7 @@ module base_half() {
         cut(false);
         
         hinge_axis() cylinder(d=hinge_diameter, h=outsideplus.x, center=true, $fn=30);
+        latch_axis() cylinder(d=latch_diameter, h=outsideplus.x, center=true, $fn=30);
     }
 }
 
@@ -59,13 +62,14 @@ module cover_end_plate() {
         translate([hinge_plate_thickness / 2, 0, 0])
         cube([hinge_plate_thickness, outsideplusexact.y, outsideplusexact.z], center=true);
     
-        hinge_axis() inward_nub(hinge_nub_thickness);
+        hinge_axis() inward_nub(hinge_diameter + hinge_plate_gap, hinge_nub_thickness, 1);
+        latch_axis() inward_nub(latch_diameter, latch_nub_thickness, 0.5);
     }
 }
 
-module inward_nub(h) {
+module inward_nub(d, h, bevel_slope) {
     mirror([0, 0, 1])  // sticks out towards center
-    cylinder(d1=hinge_diameter, d2=hinge_diameter - h, h=h, $fn=30);
+    cylinder(d1=d, d2=max(0, d - 2 * h / bevel_slope), h=h, $fn=30);
 }
 
 module cut(is_for_cover) {
@@ -98,7 +102,14 @@ module shell(is_for_cover) {
 }
 
 module hinge_axis() {
-    translate([0, interior_dimensions.y / 2 - interior_dimensions.z / 2])
+    translate([0, interior_dimensions.y / 2 - interior_dimensions.z / 2, 0])
+    rotate([0, 90, 0])
+    children();
+}
+
+module latch_axis() {
+    // TODO: y position is fudged
+    translate([0, interior_dimensions.y / 2 - interior_dimensions.z * 1.2, -interior_dimensions.z * 0.25])
     rotate([0, 90, 0])
     children();
 }
