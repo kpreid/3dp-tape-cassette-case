@@ -1,15 +1,16 @@
 interior_dimensions = [51, 35, 8.5];
 reel_position = [10.5, -1.5];
-reel_pin_diameter = 7.5;
+reel_pin_diameter = 8;
 
 pocket_depth = 12;
 wall_thickness = 1;
-cover_gap = 0.4;
+cover_gap = 0.3;
 hinge_plate_gap = 0.2;
 hinge_diameter = 3;
 hinge_nub_thickness = 1.0;
 latch_diameter = 2;
-latch_nub_thickness = 0.4;
+latch_nub_thickness = 0.8;
+latch_preload_offset = 0.8;
 outer_chamfer = 0.4;
 
 epsilon = 0.1;
@@ -94,10 +95,10 @@ module cover_half() {
 }
 
 module reel_pin() {
-    height = interior_dimensions.z / 2;
+    height = interior_dimensions.z - cover_gap;
     thickness = 0.9;
     for (i = [0:2]) {
-        rotate([0, 0, i * 120])
+        rotate([0, 0, 30 + i * 120])
         rotate([90, 0, 0])
         linear_extrude(thickness, center=true, convexity=1)
         polygon([
@@ -118,7 +119,10 @@ module cover_end_plate() {
         cube([hinge_plate_thickness, outsideplusexact.y, outsideplusexact.z], center=true);
     
         hinge_axis() inward_nub(hinge_diameter + hinge_plate_gap, hinge_nub_thickness, 2);
-        latch_axis() inward_nub(latch_diameter, latch_nub_thickness, 0.5);
+        
+        translate([0, 0, latch_preload_offset])
+        latch_axis()
+        mirror([0, 0, 1]) cylinder(d1=latch_diameter, d2=0, h=latch_nub_thickness, $fn=30);
     }
 }
 
