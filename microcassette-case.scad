@@ -2,7 +2,9 @@ interior_dimensions = [51, 35, 8.5];
 pocket_depth = 12;
 wall_thickness = 1;
 cover_gap = 0.4;
-hinge_plate_gap = 0.4;
+hinge_plate_gap = 0.2;
+hinge_diameter = 3;
+hinge_nub_thickness = 0.5;
 
 epsilon = 0.1;
 outsideplusexact = interior_dimensions + [1, 1, 1] * (wall_thickness * 2);
@@ -10,38 +12,60 @@ outsideplus = interior_dimensions + [1, 1, 1] * ((wall_thickness + epsilon) * 2)
 outsideplushalf = outsideplus / 2;
 hinge_plate_thickness = wall_thickness;
 
-preview();
+hinge_preview();
 
 
 module preview() {
-    base_half();
+    color("pink") base_half();
     %cover_half();
+}
+
+module hinge_preview() {
+    difference() {
+        union() {
+            color("pink") base_half();
+            cover_half();
+        }
+        
+        translate(interior_dimensions * -0.45)
+        cube(outsideplus);
+    }
 }
 
 module base_half() {
     difference() {
         shell(false);
+        
         cut(false);
         
-        hinge_axis() cylinder(d=3, h=interior_dimensions.x, $fn=30);
+        hinge_axis() cylinder(d=hinge_diameter, h=outsideplus.x, center=true, $fn=30);
     }
 }
 
 module cover_half() {
-    intersection() {
-        shell(true);
-        cut(true);
+    render(convexity=4) {  // cheap and improves glitches in preview
+        intersection() {
+            shell(true);
+            cut(true);
+        }
+        
+        mirrored([1, 0, 0])
+        cover_end_plate();
     }
-    
-    mirrored([1, 0, 0])
-    cover_end_plate();
 }
 
 module cover_end_plate() {
     translate([interior_dimensions.x / 2 + wall_thickness + hinge_plate_gap, 0, 0]) {
         translate([hinge_plate_thickness / 2, 0, 0])
         cube([hinge_plate_thickness, outsideplusexact.y, outsideplusexact.z], center=true);
+    
+        hinge_axis() inward_nub(hinge_nub_thickness);
     }
+}
+
+module inward_nub(h) {
+    mirror([0, 0, 1])  // sticks out towards center
+    cylinder(d1=hinge_diameter, d2=hinge_diameter - h, h=h, $fn=30);
 }
 
 module cut(is_for_cover) {
