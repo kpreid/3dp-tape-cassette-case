@@ -1,4 +1,7 @@
 interior_dimensions = [51, 35, 8.5];
+reel_position = [10.5, -1.5];
+reel_pin_diameter = 7.5;
+
 pocket_depth = 12;
 wall_thickness = 1;
 cover_gap = 0.4;
@@ -81,6 +84,31 @@ module cover_half() {
             
             outside_chamfer_shape();
         }
+    }
+    
+    // Reel locking pin
+    mirrored([1, 0, 0])
+    translate([reel_position.x, reel_position.y, interior_dimensions.z / 2])
+    mirror([0, 0, 1])
+    reel_pin();
+}
+
+module reel_pin() {
+    height = interior_dimensions.z / 2;
+    thickness = 0.9;
+    for (i = [0:2]) {
+        rotate([0, 0, i * 120])
+        rotate([90, 0, 0])
+        linear_extrude(thickness, center=true, convexity=1)
+        polygon([
+            [0, 0],
+            [reel_pin_diameter / 2, 0],
+            [reel_pin_diameter / 2, height / 2],
+            [thickness, height],
+            [0, height],
+        ]);
+        //translate([reel_pin_diameter / 4, 0, interior_dimensions.z / 4])
+        //cube([reel_pin_diameter / 2, 1, interior_dimensions.z / 2], center=true);
     }
 }
 
