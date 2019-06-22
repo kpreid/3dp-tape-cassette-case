@@ -6,7 +6,7 @@ hinge_plate_gap = 0.2;
 hinge_diameter = 3;
 hinge_nub_thickness = 1.0;
 latch_diameter = 2;
-latch_nub_thickness = 0.2;
+latch_nub_thickness = 0.4;
 
 epsilon = 0.1;
 outsideplusexact = interior_dimensions + [1, 1, 1] * (wall_thickness * 2);
@@ -14,8 +14,20 @@ outsideplus = interior_dimensions + [1, 1, 1] * ((wall_thickness + epsilon) * 2)
 outsideplushalf = outsideplus / 2;
 hinge_plate_thickness = wall_thickness;
 
-hinge_preview();
 
+printable();
+
+
+module printable() {
+    separation = outsideplus.x + hinge_plate_thickness + 1;
+    
+    translate([-separation / 2, 0, 0])
+    base_half();
+
+    translate([separation / 2, 0, 0])
+    rotate([180, 0, 0])
+    cover_half();
+}
 
 module preview() {
     color("pink") base_half();
@@ -62,7 +74,7 @@ module cover_end_plate() {
         translate([hinge_plate_thickness / 2, 0, 0])
         cube([hinge_plate_thickness, outsideplusexact.y, outsideplusexact.z], center=true);
     
-        hinge_axis() inward_nub(hinge_diameter + hinge_plate_gap, hinge_nub_thickness, 1);
+        hinge_axis() inward_nub(hinge_diameter + hinge_plate_gap, hinge_nub_thickness, 2);
         latch_axis() inward_nub(latch_diameter, latch_nub_thickness, 0.5);
     }
 }
