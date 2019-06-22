@@ -2,22 +2,25 @@ interior_dimensions = [51, 35, 8.5];
 pocket_depth = 12;
 wall_thickness = 1;
 cover_gap = 0.4;
+hinge_plate_gap = 0.4;
 
 epsilon = 0.1;
+outsideplusexact = interior_dimensions + [1, 1, 1] * (wall_thickness * 2);
 outsideplus = interior_dimensions + [1, 1, 1] * ((wall_thickness + epsilon) * 2);
 outsideplushalf = outsideplus / 2;
+hinge_plate_thickness = wall_thickness;
 
 preview();
 
 
 module preview() {
     base_half();
-    cover_half();
+    %cover_half();
 }
 
 module base_half() {
     difference() {
-        shell();
+        shell(false);
         cut(false);
         
         hinge_axis() cylinder(d=3, h=interior_dimensions.x, $fn=30);
@@ -26,8 +29,18 @@ module base_half() {
 
 module cover_half() {
     intersection() {
-        shell();
+        shell(true);
         cut(true);
+    }
+    
+    mirrored([1, 0, 0])
+    cover_end_plate();
+}
+
+module cover_end_plate() {
+    translate([interior_dimensions.x / 2 + wall_thickness + hinge_plate_gap, 0, 0]) {
+        translate([hinge_plate_thickness / 2, 0, 0])
+        cube([hinge_plate_thickness, outsideplusexact.y, outsideplusexact.z], center=true);
     }
 }
 
@@ -36,7 +49,7 @@ module cut(is_for_cover) {
     translate(is_for_cover ? [0, -cover_gap / sqrt(2), cover_gap] : [0, 0, 0])
     rotate([0, 90, 0])
     mirror([1, 0, 0])
-    linear_extrude(outsideplus.x, center=true)
+    linear_extrude(interior_dimensions.x + 2 * (wall_thickness + hinge_plate_gap + epsilon), center=true)
     polygon([
         [-interior_dimensions.z/2, -outsideplushalf.y],
         [-interior_dimensions.z/2, outsideplushalf.y - pocket_depth - slant],
@@ -45,11 +58,14 @@ module cut(is_for_cover) {
     ]);
 }
 
-module shell() {
+module shell(is_for_cover) {
     difference() {
         minkowski() {
-            octahedron(wall_thickness / 2);
-            cube([1, 1, 1] * wall_thickness, center=true);
+            cube([
+                (wall_thickness + (is_for_cover ? hinge_plate_gap + hinge_plate_thickness : 0)) * 2,
+                wall_thickness * 2,
+                wall_thickness * 2,
+            ], center=true);
             
             cube(interior_dimensions, center=true);
         }
@@ -84,4 +100,9 @@ module octahedron(r) {
             [1, 4, 3],
             [1, 3, 5],
         ], convexity=1);
+}
+
+module mirrored(axis) {
+    children();
+    mirror(axis) children();
 }
