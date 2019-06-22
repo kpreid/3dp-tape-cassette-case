@@ -19,6 +19,8 @@ module base_half() {
     difference() {
         shell();
         cut(false);
+        
+        hinge_axis() cylinder(d=3, h=interior_dimensions.x, $fn=30);
     }
 }
 
@@ -53,6 +55,12 @@ module shell() {
         }
         cube(interior_dimensions, center=true);
     }
+}
+
+module hinge_axis() {
+    translate([0, interior_dimensions.y / 2 - interior_dimensions.z / 2])
+    rotate([0, 90, 0])
+    children();
 }
 
 module octahedron(r) {
