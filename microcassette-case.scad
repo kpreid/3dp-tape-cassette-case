@@ -7,19 +7,24 @@ hinge_diameter = 3;
 hinge_nub_thickness = 1.0;
 latch_diameter = 2;
 latch_nub_thickness = 0.4;
+outer_chamfer = 0.4;
 
 epsilon = 0.1;
 outsideplusexact = interior_dimensions + [1, 1, 1] * (wall_thickness * 2);
 outsideplus = interior_dimensions + [1, 1, 1] * ((wall_thickness + epsilon) * 2);
 outsideplushalf = outsideplus / 2;
 hinge_plate_thickness = wall_thickness;
+full_outside_dimensions = interior_dimensions + [
+    wall_thickness + hinge_plate_thickness + hinge_plate_gap,
+    wall_thickness, 
+    wall_thickness] * 2;
 
 
 printable();
 
 
 module printable() {
-    separation = outsideplus.x + hinge_plate_thickness + 1;
+    separation = full_outside_dimensions.x + 1;
     
     translate([-separation / 2, 0, 0])
     base_half();
@@ -47,25 +52,35 @@ module hinge_preview() {
 }
 
 module base_half() {
-    difference() {
-        shell(false);
-        
-        cut(false);
-        
-        hinge_axis() cylinder(d=hinge_diameter, h=outsideplus.x, center=true, $fn=30);
-        latch_axis() cylinder(d=latch_diameter, h=outsideplus.x, center=true, $fn=30);
+    intersection() {
+        difference() {
+            shell(false);
+            
+            cut(false);
+            
+            hinge_axis() cylinder(d=hinge_diameter, h=outsideplus.x, center=true, $fn=30);
+            latch_axis() cylinder(d=latch_diameter, h=outsideplus.x, center=true, $fn=30);
+        }
+
+        outside_chamfer_shape();
     }
 }
 
 module cover_half() {
     render(convexity=4) {  // cheap and improves glitches in preview
         intersection() {
-            shell(true);
-            cut(true);
+            union() {
+                intersection() {
+                    shell(true);
+                    cut(true);
+                }
+                
+                mirrored([1, 0, 0])
+                cover_end_plate();
+            }
+            
+            outside_chamfer_shape();
         }
-        
-        mirrored([1, 0, 0])
-        cover_end_plate();
     }
 }
 
@@ -100,7 +115,7 @@ module cut(is_for_cover) {
 
 module shell(is_for_cover) {
     difference() {
-        minkowski() {
+        minkowski() {  // TODO this can be just a sized cube
             cube([
                 (wall_thickness + (is_for_cover ? hinge_plate_gap + hinge_plate_thickness : 0)) * 2,
                 wall_thickness * 2,
@@ -111,6 +126,10 @@ module shell(is_for_cover) {
         }
         cube(interior_dimensions, center=true);
     }
+}
+
+module outside_chamfer_shape() {
+    octabox(d=full_outside_dimensions, r=outer_chamfer);
 }
 
 module hinge_axis() {
@@ -124,6 +143,13 @@ module latch_axis() {
     translate([0, interior_dimensions.y / 2 - interior_dimensions.z * 1.2, -interior_dimensions.z * 0.25])
     rotate([0, 90, 0])
     children();
+}
+
+module octabox(d, r, center=true) {
+    minkowski() {
+        cube(d - [1, 1, 1] * r * 2, center=center);
+        octahedron(r);
+    }
 }
 
 module octahedron(r) {
