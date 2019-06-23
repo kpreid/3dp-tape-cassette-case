@@ -28,6 +28,11 @@ full_outside_dimensions = interior_dimensions + [
     wall_thickness + hinge_plate_thickness + hinge_plate_gap,
     wall_thickness, 
     wall_thickness] * 2;
+hinge_position = [
+    0, // must be 0, symmetric about x axis
+    interior_dimensions.y / 2 - interior_dimensions.z * 0.3,  // TODO: calculate this based on the pocket_depth
+    0
+];
 
 
 printable();
@@ -50,14 +55,35 @@ module preview() {
 }
 
 module hinge_preview() {
+    for (i = [0:6]) {
+        angle = i * 10;
+        translate([0, 0, (full_outside_dimensions.z + 5) * i + full_outside_dimensions.y * sin(angle)])
+        hinge_preview_1(angle);
+    }
+    for (i = [7:9]) {
+        angle = i * 10;
+        translate([0, 10 + full_outside_dimensions.y, (full_outside_dimensions.y + 5) * (i - 7)])
+        hinge_preview_1(angle);
+    }
+}
+
+module hinge_preview_1(angle) {
     difference() {
-        union() {
-            color("pink") base_half();
-            cover_half();
-        }
-        
-        translate(interior_dimensions * -0.45)
-        cube(outsideplus);
+        color("pink") base_half();
+        cut();
+    }
+    
+    translate(hinge_position)
+    rotate([-angle, 0, 0]) 
+    translate(-hinge_position)
+    difference() {
+        cover_half();
+        cut();
+    }
+    
+    module cut() {
+        translate([full_outside_dimensions.x * 0.2, 0, 0])
+        cube(full_outside_dimensions * 1.2, center=true);
     }
 }
 
@@ -114,8 +140,6 @@ module reel_pin() {
             [thickness, height],
             [0, height],
         ]);
-        //translate([reel_pin_diameter / 4, 0, interior_dimensions.z / 4])
-        //cube([reel_pin_diameter / 2, 1, interior_dimensions.z / 2], center=true);
     }
 }
 
@@ -171,7 +195,7 @@ module outside_chamfer_shape() {
 }
 
 module hinge_axis() {
-    translate([0, interior_dimensions.y / 2 - interior_dimensions.z / 2, 0])
+    translate(hinge_position)
     rotate([0, 90, 0])
     children();
 }
